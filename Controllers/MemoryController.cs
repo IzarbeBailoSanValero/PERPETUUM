@@ -51,6 +51,34 @@ public class MemoryController : ControllerBase
         }
     }
 
+
+    //recuperación
+    [HttpGet("user/{userId}")]
+    [Authorize(Roles = Roles.StandardUser)]
+    public async Task<ActionResult<List<MemoryResponseDTO>>> GetByUser(int userId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int currentUserId))
+            return Unauthorized();
+        if (currentUserId != userId)
+            return Forbid();
+        try
+        {
+            var list = await _memoryService.GetByUserIdAsync(userId);
+            return Ok(list);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener recuerdos del usuario {UserId}", userId);
+            return StatusCode(500, "Error interno al recuperar los datos.");
+        }
+    }
+
+
+
+
+
+
     [HttpGet("pending")]
     [Authorize(Roles = Roles.Admin + "," + Roles.Guardian)]
     public async Task<ActionResult<List<MemoryResponseDTO>>> GetPendingMemories()
@@ -99,7 +127,7 @@ public class MemoryController : ControllerBase
             // Guardian y StandardUser viven en tablas distintas:
             // - StandardUser → UserId relleno, GuardianAuthorId NULL
             // - Guardian     → GuardianAuthorId relleno, UserId NULL
-            int? userId          = User.IsInRole(Roles.Guardian) ? null : claimUserId;
+            int? userId = User.IsInRole(Roles.Guardian) ? null : claimUserId;
             int? guardianAuthorId = User.IsInRole(Roles.Guardian) ? claimUserId : null;
 
             var newId = await _memoryService.AddMemoryAsync(dto, userId, guardianAuthorId);
@@ -145,7 +173,7 @@ public class MemoryController : ControllerBase
             // Guardian y StandardUser viven en tablas distintas:
             // - StandardUser → UserId relleno, GuardianAuthorId NULL
             // - Guardian     → GuardianAuthorId relleno, UserId NULL
-            int? userId           = User.IsInRole(Roles.Guardian) ? null : claimUserId;
+            int? userId = User.IsInRole(Roles.Guardian) ? null : claimUserId;
             int? guardianAuthorId = User.IsInRole(Roles.Guardian) ? claimUserId : null;
 
             if (dto.Photo == null || dto.Photo.Length == 0)
@@ -270,16 +298,16 @@ public class MemoryController : ControllerBase
 
             var statusEnum = (MemoryStatus)status;
 
-                bool hasBeenUpdated = await _memoryService.UpdateStatusAsync(id, statusEnum);
+            bool hasBeenUpdated = await _memoryService.UpdateStatusAsync(id, statusEnum);
 
-                if (!hasBeenUpdated) return NotFound($"No se encontró la memoria con ID {id}.");
+            if (!hasBeenUpdated) return NotFound($"No se encontró la memoria con ID {id}.");
 
-                return NoContent();
-                }
+            return NoContent();
+        }
 
 
 
-  
+
         catch (ArgumentException ex)
         {
             _logger.LogWarning("Error respecto a las reglas de negocio en memory: {Message}", ex.Message);

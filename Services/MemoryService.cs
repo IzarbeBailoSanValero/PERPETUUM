@@ -126,6 +126,31 @@ public class MemoryService : IMemoryService
         }).ToList();
     }
 
+
+    //recuperacion
+    public async Task<List<MemoryResponseDTO>> GetByUserIdAsync(int userId)
+    {
+        var memories = await _repository.GetByUserIdAsync(userId);
+        var responseDtos = new List<MemoryResponseDTO>();
+
+        foreach (var memory in memories)
+        {
+            responseDtos.Add(MapToDTO(memory));
+        }
+
+        return responseDtos;
+
+        
+    }
+
+
+    
+
+     
+
+      
+
+
     private MemoryResponseDTO MapToDTO(Memory m)
     {
         return new MemoryResponseDTO

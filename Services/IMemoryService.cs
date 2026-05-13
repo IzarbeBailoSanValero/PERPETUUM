@@ -17,4 +17,7 @@ public interface IMemoryService
     Task<List<MemoryResponseDTO>> GetPendingMemoriesAsync(List<int>? deceasedIds);
 
     Task<bool> DeleteMemoryAsync(int id); //soft delete
+
+    //recuperación
+    Task<List<MemoryResponseDTO>> GetByUserIdAsync(int userId);
 }

@@ -349,4 +349,44 @@ public class MemoryRepository : IMemoryRepository
         return memory;
     }
 
+
+
+    //recuperación
+    public async Task<List<Memory>> GetByUserIdAsync(int userId)
+    {
+        var list = new List<Memory>();
+        try
+        {
+            using (var connection = new MySqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+
+                string query = @"
+                    SELECT Id, CreatedDate, Type, Status, TextContent, MediaURL, AuthorRelation, DeceasedId, UserId, GuardianAuthorId
+                    FROM Memory 
+                    WHERE UserId = @UserId
+                    ORDER BY CreatedDate DESC";
+
+                using (var command = new MySqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@UserId", userId);
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            list.Add(MapFromReader(reader));
+                        }
+                    }
+                }
+            }
+            return list;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error obteniendo memorias por UserId {UserId}", userId);
+            throw;
+        }
+    }
+
 }
