@@ -130,17 +130,13 @@ public class MemoryService : IMemoryService
     //recuperacion
     public async Task<List<MemoryResponseDTO>> GetByUserIdAsync(int userId)
     {
-        var memories = await _repository.GetByUserIdAsync(userId);
-        var responseDtos = new List<MemoryResponseDTO>();
-
-        foreach (var memory in memories)
+        var rows = await _repository.GetByUserIdAsync(userId);
+        return rows.Select(r =>
         {
-            responseDtos.Add(MapToDTO(memory));
-        }
-
-        return responseDtos;
-
-        
+            var dto = MapToDTO(r.memory);
+            dto.DeceasedName = r.deceasedName;
+            return dto;
+        }).ToList();
     }
 
 

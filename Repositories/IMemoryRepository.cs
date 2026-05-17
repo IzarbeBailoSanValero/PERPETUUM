@@ -19,7 +19,7 @@ public interface IMemoryRepository
 
     //Recupera memorias pendientes, opcionalmente filtradas por difuntos (para Guardian).
     Task<List<(Memory memory, string deceasedName)>> GetPendingWithDeceasedNameAsync(List<int>? deceasedIds);
-    Task<List<Memory>> GetByUserIdAsync(int userId);
+    Task<List<(Memory memory, string deceasedName)>> GetByUserIdAsync(int userId);
 
     
 

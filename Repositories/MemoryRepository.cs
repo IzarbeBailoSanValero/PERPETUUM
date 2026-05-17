@@ -352,9 +352,9 @@ public class MemoryRepository : IMemoryRepository
 
 
     //recuperación
-    public async Task<List<Memory>> GetByUserIdAsync(int userId)
+    public async Task<List<(Memory memory, string deceasedName)>> GetByUserIdAsync(int userId)
     {
-        var list = new List<Memory>();
+        var list = new List<(Memory, string)>();
         try
         {
             using (var connection = new MySqlConnection(_connectionString))
@@ -362,10 +362,11 @@ public class MemoryRepository : IMemoryRepository
                 await connection.OpenAsync();
 
                 string query = @"
-                    SELECT Id, CreatedDate, Type, Status, TextContent, MediaURL, AuthorRelation, DeceasedId, UserId, GuardianAuthorId
-                    FROM Memory 
-                    WHERE UserId = @UserId
-                    ORDER BY CreatedDate DESC";
+                    SELECT m.Id, m.CreatedDate, m.Type, m.Status, m.TextContent, m.MediaURL, m.AuthorRelation, m.DeceasedId, m.UserId, m.GuardianAuthorId, d.Name AS DeceasedName
+                    FROM Memory m
+                    INNER JOIN Deceased d ON m.DeceasedId = d.Id
+                    WHERE m.UserId = @UserId
+                    ORDER BY m.CreatedDate DESC";
 
                 using (var command = new MySqlCommand(query, connection))
                 {
@@ -375,7 +376,9 @@ public class MemoryRepository : IMemoryRepository
                     {
                         while (await reader.ReadAsync())
                         {
-                            list.Add(MapFromReader(reader));
+                            var memory = MapFromReader(reader);
+                            var name = reader.GetString("DeceasedName");
+                            list.Add((memory, name));
                         }
                     }
                 }
