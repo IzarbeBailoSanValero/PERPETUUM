@@ -365,12 +365,13 @@ public class MemoryRepository : IMemoryRepository
                     SELECT m.Id, m.CreatedDate, m.Type, m.Status, m.TextContent, m.MediaURL, m.AuthorRelation, m.DeceasedId, m.UserId, m.GuardianAuthorId, d.Name AS DeceasedName
                     FROM Memory m
                     INNER JOIN Deceased d ON m.DeceasedId = d.Id
-                    WHERE m.UserId = @UserId
+                    WHERE m.UserId = @UserId AND m.Status != @RejectedStatus
                     ORDER BY m.CreatedDate DESC";
 
                 using (var command = new MySqlCommand(query, connection))
                 {
                     command.Parameters.AddWithValue("@UserId", userId);
+                    command.Parameters.AddWithValue("@RejectedStatus", (int)MemoryStatus.Rejected);
 
                     using (var reader = await command.ExecuteReaderAsync())
                     {
