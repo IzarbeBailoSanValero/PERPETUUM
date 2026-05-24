@@ -54,14 +54,17 @@ public class MemoryController : ControllerBase
 
     //recuperación
     [HttpGet("user/{userId}")]
-    [Authorize(Roles = Roles.StandardUser)]
+    [Authorize(Roles = Roles.StandardUser + "," + Roles.Admin)]
     public async Task<ActionResult<List<MemoryResponseDTO>>> GetByUser(int userId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int currentUserId))
             return Unauthorized();
-        if (currentUserId != userId)
+        
+        // Admin puede ver cualquier usuario, StandardUser solo el suyo
+        if (!User.IsInRole(Roles.Admin) && currentUserId != userId)
             return Forbid();
+        
         try
         {
             var list = await _memoryService.GetByUserIdAsync(userId);
